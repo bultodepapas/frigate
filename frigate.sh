@@ -7,7 +7,7 @@ source <(curl -s https://raw.githubusercontent.com/bultodepapas/frigate/refs/hea
 
 APP="Frigate"
 var_tags="nvr"
-var_cpu="4"
+var_cpu="12"
 var_ram="4096"
 var_disk="20"
 var_os="debian"
