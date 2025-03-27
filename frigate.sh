@@ -31,6 +31,31 @@ function update_script() {
   exit
 }
 
+# Función para establecer los límites de recursos del contenedor
+function set_limits() {
+    local container_conf="/etc/pve/lxc/${CTID}.conf"
+    
+    if [[ -f "$container_conf" ]]; then
+        echo "Configuring resource limits for Frigate container..."
+        
+        # Establecer límites de archivos abiertos
+        echo "lxc.prlimit.nofile: 1048576" >> "$container_conf"
+        
+        # Establecer límites de procesos
+        echo "lxc.prlimit.nproc: 65535" >> "$container_conf"
+        
+        # Otros límites que puedas necesitar
+        # echo "lxc.cgroup2.memory.limit_in_bytes: 4G"
+        # echo "lxc.cgroup2.cpu.shares: 1024"
+        
+        msg_ok "Resource limits set successfully!"
+    else
+        msg_error "Configuration file for the container not found!"
+        exit 1
+    fi
+}
+
+
 start
 build_container
 description
