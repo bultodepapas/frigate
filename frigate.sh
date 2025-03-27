@@ -7,8 +7,8 @@ source <(curl -s https://raw.githubusercontent.com/bultodepapas/frigate/refs/hea
 
 APP="Frigate"
 var_tags="nvr"
-var_cpu="12"
-var_ram="4096"
+var_cpu="12"   # Número de núcleos de CPU que quieres asignar
+var_ram="8192" # 8 GB de RAM para garantizar un buen rendimiento
 var_disk="20"
 var_os="debian"
 var_version="11"
@@ -38,15 +38,22 @@ function set_limits() {
     if [[ -f "$container_conf" ]]; then
         echo "Configuring resource limits for Frigate container..."
         
-        # Establecer límites de archivos abiertos
+        # Establecer límites de archivos abiertos (nofile) en un número muy alto
         echo "lxc.prlimit.nofile: 1048576" >> "$container_conf"
         
-        # Establecer límites de procesos
+        # Establecer límites de procesos (nproc) para manejar muchos procesos simultáneos
         echo "lxc.prlimit.nproc: 65535" >> "$container_conf"
         
-        # Otros límites que puedas necesitar
-        # echo "lxc.cgroup2.memory.limit_in_bytes: 4G"
-        # echo "lxc.cgroup2.cpu.shares: 1024"
+        # Establecer límite de memoria (en este caso, 8GB)
+        echo "lxc.cgroup2.memory.limit_in_bytes: 8G" >> "$container_conf"
+        
+        # Asegurarse de que tenga suficiente acceso a la CPU
+        echo "lxc.cgroup2.cpu.shares: 1024" >> "$container_conf"   # Mayor prioridad de CPU
+        echo "lxc.cgroup2.cpuset.cpus: 0-11" >> "$container_conf"  # Usar los primeros 12 núcleos disponibles
+        
+        # Ajustar otros límites importantes
+        echo "lxc.prlimit.stack: 8192" >> "$container_conf"  # Asegurar que el tamaño de pila sea grande
+        echo "lxc.prlimit.memlock: unlimited" >> "$container_conf"  # Asegurar que no haya limitación en la memoria bloqueada
         
         msg_ok "Resource limits set successfully!"
     else
@@ -55,9 +62,9 @@ function set_limits() {
     fi
 }
 
-
 start
 build_container
+set_limits  # Aplicar los límites de recursos después de la construcción del contenedor
 description
 
 msg_ok "Completed Successfully!\n"
